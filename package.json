@@ -1,0 +1,19 @@
+{
+  "name": "decisionhub",
+  "version": "0.1.0",
+  "description": "A persistent, searchable database of project decisions — tagged by AI or human authorship",
+  "bin": {
+    "decisionhub": "./bin/decisionhub.js"
+  },
+  "scripts": {
+    "start": "node bin/decisionhub.js",
+    "dev": "node bin/decisionhub.js"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

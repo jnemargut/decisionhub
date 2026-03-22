@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DecisionHub</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --border-light: #f1f5f9;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-light: #eff6ff;
+      --green: #059669;
+      --green-light: #ecfdf5;
+      --amber: #f59e0b;
+      --amber-light: #fffbeb;
+      --red: #e11d48;
+      --red-light: #fff1f2;
+      --ai-bg: #ede9fe;
+      --ai-text: #6d28d9;
+      --human-bg: #e0f2fe;
+      --human-text: #0369a1;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.03em;
+      white-space: nowrap;
+    }
+
+    .logo span { color: var(--accent); }
+
+    .project-selector {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex: 1;
+    }
+
+    .project-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    select {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      max-width: 220px;
+    }
+
+    select:focus { outline: none; border-color: var(--accent); }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-left: auto;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-ghost { background: transparent; color: var(--text-secondary); border: 1.5px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); }
+    .btn-sm { padding: 4px 10px; font-size: 0.72rem; }
+    .btn-green { background: var(--green); color: white; }
+    .btn-green:hover { background: #047857; }
+
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── LAYOUT ── */
+    .layout {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    /* ── SEARCH ── */
+    .search-wrap {
+      margin-bottom: 1.5rem;
+    }
+
+    .search-input-wrap {
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px 10px 36px;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      box-shadow: var(--shadow);
+      transition: border-color 0.15s;
+    }
+
+    .search-input:focus { outline: none; border-color: var(--accent); }
+    .search-input::placeholder { color: var(--text-muted); }
+
+    .search-filters {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .chip {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .chip:hover { opacity: 0.85; }
+    .chip.active { border-color: currentColor; }
+    .chip-all { background: var(--border-light); color: var(--text-secondary); }
+    .chip-ai { background: var(--ai-bg); color: var(--ai-text); }
+    .chip-human { background: var(--human-bg); color: var(--human-text); }
+    .chip-open { background: var(--amber-light); color: #92400e; }
+    .chip-decided { background: var(--green-light); color: #047857; }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 1.5rem 0 0.75rem;
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .section-count {
+      background: var(--border-light);
+      color: var(--text-muted);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.125rem;
+      margin-bottom: 0.625rem;
+      box-shadow: var(--shadow);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .card:hover { border-color: #c7d2fe; }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .card-main { flex: 1; min-width: 0; }
+
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    .card-rationale {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.35rem;
+      line-height: 1.55;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-ai { background: var(--ai-bg); color: var(--ai-text); }
+    .badge-human { background: var(--human-bg); color: var(--human-text); }
+    .badge-open { background: var(--amber-light); color: #92400e; }
+    .badge-decided { background: var(--green-light); color: #047857; }
+    .badge-meets { background: var(--green-light); color: #047857; }
+    .badge-partial { background: var(--amber-light); color: #92400e; }
+    .badge-does-not-meet { background: var(--red-light); color: #be123c; }
+    .badge-date { background: var(--border-light); color: var(--text-muted); }
+
+    .card-actions {
+      display: flex;
+      gap: 0.4rem;
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .card:hover .card-actions { opacity: 1; }
+
+    /* ── CHECK STATUS ── */
+    .check-strip {
+      margin-top: 0.625rem;
+      padding-top: 0.625rem;
+      border-top: 1px solid var(--border-light);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .check-strip .check-label { font-weight: 700; white-space: nowrap; }
+    .check-strip .check-reason { color: var(--text-secondary); flex: 1; }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .empty h3 { font-size: 1rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.35rem; }
+    .empty p { font-size: 0.85rem; }
+
+    /* ── SEARCH RESULTS ── */
+    .snippet {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-top: 0.35rem;
+      line-height: 1.55;
+    }
+
+    .snippet mark {
+      background: #fef9c3;
+      color: #92400e;
+      border-radius: 2px;
+      padding: 0 2px;
+      font-weight: 600;
+    }
+
+    .search-section-label {
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0.75rem 0 0.35rem;
+    }
+
+    /* ── MODAL ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.4);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-backdrop.hidden { display: none; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      width: 100%;
+      max-width: 520px;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title { font-size: 1rem; font-weight: 700; }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.25rem;
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .modal-close:hover { background: var(--bg); color: var(--text-primary); }
+
+    .modal-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+      letter-spacing: 0.03em;
+    }
+
+    input[type="text"], textarea, .select-styled {
+      width: 100%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus, textarea:focus, .select-styled:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: white;
+    }
+
+    textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+
+    .author-toggle {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .author-option {
+      flex: 1;
+      padding: 7px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .author-option.selected-ai { background: var(--ai-bg); color: var(--ai-text); border-color: var(--ai-text); }
+    .author-option.selected-human { background: var(--human-bg); color: var(--human-text); border-color: var(--human-text); }
+
+    /* ── PROJECT CREATE ── */
+    .new-project-banner {
+      background: var(--surface);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .new-project-banner h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .new-project-banner p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; }
+
+    .inline-create {
+      display: flex;
+      gap: 0.5rem;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    /* ── EXPAND/COLLAPSE ── */
+    .card-expand-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 0;
+      transition: color 0.15s;
+    }
+
+    .card-expand-btn:hover { color: var(--accent); }
+
+    .card-expanded-body {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border-light);
+      display: none;
+    }
+
+    .card-expanded-body.open { display: block; }
+
+    .edit-field { margin-bottom: 0.75rem; }
+    .edit-field label { font-size: 0.7rem; }
+    .edit-field input, .edit-field textarea { font-size: 0.8rem; padding: 6px 10px; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--text-primary);
+      color: white;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      z-index: 300;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      pointer-events: none;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.green { background: var(--green); }
+    .toast.red { background: #dc2626; }
+
+    /* ── NO PROJECT ── */
+    #no-project { display: none; }
+
+    @media (max-width: 600px) {
+      .topbar { padding: 0 1rem; gap: 0.5rem; }
+      .layout { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">Decision<span>Hub</span></div>
+  <div class="project-selector">
+    <span class="project-label">Project</span>
+    <select id="project-select">
+      <option value="">— select —</option>
+    </select>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost btn-sm" id="new-project-btn">+ Project</button>
+    <button class="btn btn-primary btn-sm" id="add-question-btn" style="display:none">+ Open Question</button>
+    <div class="live-dot" title="Live — reloads when files change"></div>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="layout">
+
+  <!-- No project selected -->
+  <div id="no-project">
+    <div class="new-project-banner">
+      <h2>Welcome to DecisionHub</h2>
+      <p>Select a project above or create a new one to start tracking decisions.</p>
+      <div class="inline-create">
+        <input type="text" id="quick-project-name" placeholder="Project name..." />
+        <button class="btn btn-primary" id="quick-create-btn">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project view -->
+  <div id="project-view" style="display:none">
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="search-input"
+          placeholder="Search questions, decisions, rationale..." />
+      </div>
+      <div class="search-filters">
+        <span class="chip chip-all active" data-filter="all">All</span>
+        <span class="chip chip-ai" data-filter="ai">AI</span>
+        <span class="chip chip-human" data-filter="human">Human</span>
+        <span class="chip chip-open" data-filter="open">Open</span>
+        <span class="chip chip-decided" data-filter="decided">Decided</span>
+      </div>
+    </div>
+
+    <!-- Search results (shown when searching) -->
+    <div id="search-results" style="display:none"></div>
+
+    <!-- Normal view -->
+    <div id="normal-view">
+
+      <!-- Open Questions -->
+      <div class="section-header">
+        <span class="section-title">Open Questions</span>
+        <span class="section-count" id="oq-count">0</span>
+      </div>
+      <div id="questions-list"></div>
+
+      <!-- Decisions -->
+      <div class="section-header" style="margin-top:2rem">
+        <span class="section-title">Decisions</span>
+        <span class="section-count" id="d-count">0</span>
+      </div>
+      <div id="decisions-list"></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add Open Question -->
+<div class="modal-backdrop hidden" id="question-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Add Open Question</span>
+      <button class="modal-close" data-close="question-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <label>Question *</label>
+        <input type="text" id="q-text" placeholder="What should we decide about...?" />
+      </div>
+      <div>
+        <label>Context <span style="font-weight:400;color:var(--text-muted)">(optional — why does this need deciding?)</span></label>
+        <textarea id="q-context" placeholder="Background, constraints, tradeoffs to consider..."></textarea>
+      </div>
+      <div>
+        <label>Raised by</label>
+        <div class="author-toggle">
+          <div class="author-option selected-human" data-author="human" id="q-author-human">👤 Human</div>
+          <div class="author-option" data-author="ai" id="q-author-ai">🤖 AI</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="question-modal">Cancel</button>
+      <button class="btn btn-primary" id="q-submit">Add Question</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add Decision -->
+<div class="modal-backdrop hidden" id="decision-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Record a Decision</span>
+      <button class="modal-close" data-close="decision-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <label>Answers question <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+        <select class="select-styled" id="d-question-select">
+          <option value="">— standalone decision —</option>
+        </select>
+      </div>
+      <div>
+        <label>Decision / Choice *</label>
+        <input type="text" id="d-choice" placeholder="We decided to..." />
+      </div>
+      <div>
+        <label>Rationale *</label>
+        <textarea id="d-rationale" placeholder="Why? What tradeoffs did you consider? What alternatives were rejected?"></textarea>
+      </div>
+      <div>
+        <label>Decided by</label>
+        <div class="author-toggle">
+          <div class="author-option selected-human" data-author="human" id="d-author-human">👤 Human</div>
+          <div class="author-option" data-author="ai" id="d-author-ai">🤖 AI</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="decision-modal">Cancel</button>
+      <button class="btn btn-primary" id="d-submit">Record Decision</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: New Project -->
+<div class="modal-backdrop hidden" id="project-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Project</span>
+      <button class="modal-close" data-close="project-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <label>Project name *</label>
+        <input type="text" id="p-name" placeholder="my-auth-service" />
+      </div>
+      <div>
+        <label>Description <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+        <input type="text" id="p-desc" placeholder="What is this project?" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-close="project-modal">Cancel</button>
+      <button class="btn btn-primary" id="p-submit">Create Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+const state = {
+  projects: [],
+  currentProject: null,
+  data: null,         // { name, questions, decisions }
+  searchQuery: '',
+  activeFilter: 'all',
+  editingQuestion: null,
+  editingDecision: null
+};
+
+// ── API helpers ──────────────────────────────────────────────────────────────
+async function api(method, url, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || 'API error');
+  return json;
+}
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = 'toast'; }, 2500);
+}
+
+// ── Modal helpers ────────────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.remove('hidden');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+document.querySelectorAll('[data-close]').forEach(btn => {
+  btn.addEventListener('click', () => closeModal(btn.dataset.close));
+});
+
+document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+  backdrop.addEventListener('click', e => {
+    if (e.target === backdrop) closeModal(backdrop.id);
+  });
+});
+
+// ── Author toggle ────────────────────────────────────────────────────────────
+function makeAuthorToggle(humanId, aiId) {
+  let selected = 'human';
+  const humanBtn = document.getElementById(humanId);
+  const aiBtn = document.getElementById(aiId);
+  const reset = () => {
+    selected = 'human';
+    humanBtn.className = 'author-option selected-human';
+    aiBtn.className = 'author-option';
+  };
+  humanBtn.addEventListener('click', () => {
+    selected = 'human';
+    humanBtn.className = 'author-option selected-human';
+    aiBtn.className = 'author-option';
+  });
+  aiBtn.addEventListener('click', () => {
+    selected = 'ai';
+    aiBtn.className = 'author-option selected-ai';
+    humanBtn.className = 'author-option';
+  });
+  return { get: () => selected, reset };
+}
+
+const qAuthor = makeAuthorToggle('q-author-human', 'q-author-ai');
+const dAuthor = makeAuthorToggle('d-author-human', 'd-author-ai');
+
+// ── Badge helpers ────────────────────────────────────────────────────────────
+function authorBadge(type) {
+  return type === 'ai'
+    ? '<span class="badge badge-ai">🤖 AI</span>'
+    : '<span class="badge badge-human">👤 Human</span>';
+}
+
+function checkBadge(check) {
+  if (!check || !check.verdict) return '';
+  const labels = { meets: '✓ Meets', partial: '⚠ Partial', 'does-not-meet': '✗ Doesn\'t Meet' };
+  const cls = { meets: 'badge-meets', partial: 'badge-partial', 'does-not-meet': 'badge-does-not-meet' };
+  const label = labels[check.verdict] || check.verdict;
+  const date = check.checkedAt ? new Date(check.checkedAt).toLocaleDateString() : '';
+  return `<span class="badge ${cls[check.verdict] || ''}">${label}</span>` +
+         (date ? `<span class="badge badge-date">Checked ${date}</span>` : '');
+}
+
+function dateBadge(iso) {
+  if (!iso) return '';
+  return `<span class="badge badge-date">${new Date(iso).toLocaleDateString()}</span>`;
+}
+
+function escapeHtml(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function highlightSnippet(snippetObj) {
+  if (!snippetObj) return '';
+  const { snippet, matchStart, matchEnd } = snippetObj;
+  const before = escapeHtml(snippet.slice(0, matchStart));
+  const match = escapeHtml(snippet.slice(matchStart, matchEnd));
+  const after = escapeHtml(snippet.slice(matchEnd));
+  return `${before}<mark>${match}</mark>${after}`;
+}
+
+// ── Render helpers ───────────────────────────────────────────────────────────
+function renderQuestionCard(q, snippetObj = null) {
+  const statusBadge = q.status === 'decided'
+    ? '<span class="badge badge-decided">Decided</span>'
+    : '<span class="badge badge-open">Open</span>';
+
+  const checkHtml = q.status !== 'decided' ? '' : '';
+
+  const snippetHtml = snippetObj
+    ? `<div class="snippet">${highlightSnippet(snippetObj)}</div>`
+    : (q.context ? `<div class="card-rationale">${escapeHtml(q.context)}</div>` : '');
+
+  return `
+    <div class="card" data-id="${q.id}" data-type="question">
+      <div class="card-top">
+        <div class="card-main">
+          <div class="card-title">${escapeHtml(q.text)}</div>
+          ${snippetHtml}
+          <div class="card-meta">
+            ${authorBadge(q.authorType)}
+            ${statusBadge}
+            ${dateBadge(q.createdAt)}
+          </div>
+        </div>
+        <div class="card-actions">
+          ${q.status === 'open'
+            ? `<button class="btn btn-ghost btn-sm" onclick="openDecisionFor('${q.id}')">+ Decide</button>`
+            : ''}
+          <button class="btn btn-ghost btn-sm" onclick="toggleExpand(this, '${q.id}', 'question')">Edit</button>
+        </div>
+      </div>
+      <div class="card-expanded-body" id="expand-${q.id}">
+        <div class="edit-field">
+          <label>Question text</label>
+          <input type="text" value="${escapeHtml(q.text)}" id="edit-q-text-${q.id}" />
+        </div>
+        <div class="edit-field">
+          <label>Context</label>
+          <textarea id="edit-q-context-${q.id}">${escapeHtml(q.context || '')}</textarea>
+        </div>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-primary btn-sm" onclick="saveQuestion('${q.id}')">Save</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleExpand(null, '${q.id}', 'question')">Cancel</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderDecisionCard(d, snippetObj = null) {
+  const check = d.implementationCheck || {};
+  const snippetHtml = snippetObj
+    ? `<div class="snippet">${highlightSnippet(snippetObj)}</div>`
+    : (d.rationale ? `<div class="card-rationale">${escapeHtml(d.rationale)}</div>` : '');
+
+  const checkHtml = check.verdict
+    ? `<div class="check-strip">
+        <span class="check-label">Impl check:</span>
+        <span>${checkBadge(check)}</span>
+        ${check.reason ? `<span class="check-reason">${escapeHtml(check.reason)}</span>` : ''}
+       </div>`
+    : '';
+
+  return `
+    <div class="card" data-id="${d.id}" data-type="decision">
+      <div class="card-top">
+        <div class="card-main">
+          <div class="card-title">${escapeHtml(d.choice)}</div>
+          ${snippetHtml}
+          <div class="card-meta">
+            ${authorBadge(d.authorType)}
+            ${dateBadge(d.createdAt)}
+            ${checkBadge(d.implementationCheck)}
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-ghost btn-sm" onclick="toggleExpand(this, '${d.id}', 'decision')">Edit</button>
+        </div>
+      </div>
+      ${checkHtml}
+      <div class="card-expanded-body" id="expand-${d.id}">
+        <div class="edit-field">
+          <label>Decision / Choice</label>
+          <input type="text" value="${escapeHtml(d.choice)}" id="edit-d-choice-${d.id}" />
+        </div>
+        <div class="edit-field">
+          <label>Rationale</label>
+          <textarea id="edit-d-rationale-${d.id}">${escapeHtml(d.rationale || '')}</textarea>
+        </div>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-primary btn-sm" onclick="saveDecision('${d.id}')">Save</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleExpand(null, '${d.id}', 'decision')">Cancel</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Expand/collapse inline edit ───────────────────────────────────────────────
+function toggleExpand(btn, id, type) {
+  const el = document.getElementById(`expand-${id}`);
+  if (el) el.classList.toggle('open');
+}
+
+// ── Save edits ────────────────────────────────────────────────────────────────
+async function saveQuestion(id) {
+  const text = document.getElementById(`edit-q-text-${id}`)?.value?.trim();
+  const context = document.getElementById(`edit-q-context-${id}`)?.value?.trim();
+  if (!text) return showToast('Question text cannot be empty', 'red');
+  try {
+    await api('PATCH', `/api/projects/${state.currentProject}/questions/${id}`, { text, context });
+    showToast('Question updated', 'green');
+    loadProject(state.currentProject);
+  } catch (e) {
+    showToast(e.message, 'red');
+  }
+}
+
+async function saveDecision(id) {
+  const choice = document.getElementById(`edit-d-choice-${id}`)?.value?.trim();
+  const rationale = document.getElementById(`edit-d-rationale-${id}`)?.value?.trim();
+  if (!choice) return showToast('Choice cannot be empty', 'red');
+  try {
+    await api('PATCH', `/api/projects/${state.currentProject}/decisions/${id}`, { choice, rationale });
+    showToast('Decision updated', 'green');
+    loadProject(state.currentProject);
+  } catch (e) {
+    showToast(e.message, 'red');
+  }
+}
+
+// ── Open "Decide" modal pre-filled ──────────────────────────────────────────
+function openDecisionFor(questionId) {
+  document.getElementById('d-question-select').value = questionId;
+  dAuthor.reset();
+  document.getElementById('d-choice').value = '';
+  document.getElementById('d-rationale').value = '';
+  openModal('decision-modal');
+}
+
+// ── Render project ────────────────────────────────────────────────────────────
+function renderProject() {
+  const data = state.data;
+  if (!data) return;
+
+  const questions = data.questions || [];
+  const decisions = data.decisions || [];
+
+  // Update open question count
+  const openCount = questions.filter(q => q.status === 'open').length;
+  document.getElementById('oq-count').textContent = openCount;
+  document.getElementById('d-count').textContent = decisions.length;
+
+  // Questions: open first
+  const openQs = questions.filter(q => q.status === 'open');
+  const decidedQs = questions.filter(q => q.status === 'decided');
+  const qList = document.getElementById('questions-list');
+
+  if (openQs.length === 0) {
+    qList.innerHTML = `<div class="empty">
+      <h3>No open questions</h3>
+      <p>Add an Open Question or let Claude suggest some with <code>/decisionhub suggest</code></p>
+    </div>`;
+  } else {
+    qList.innerHTML = openQs.map(q => renderQuestionCard(q)).join('');
+  }
+
+  // Decisions
+  const dList = document.getElementById('decisions-list');
+  if (decisions.length === 0) {
+    dList.innerHTML = `<div class="empty">
+      <h3>No decisions recorded yet</h3>
+      <p>Record a decision above, or let Claude record one with <code>/decisionhub add decision</code></p>
+    </div>`;
+  } else {
+    dList.innerHTML = decisions.slice().reverse().map(d => renderDecisionCard(d)).join('');
+  }
+
+  // Populate decision question select
+  const sel = document.getElementById('d-question-select');
+  sel.innerHTML = '<option value="">— standalone decision —</option>' +
+    questions.filter(q => q.status === 'open').map(q =>
+      `<option value="${q.id}">${escapeHtml(q.text.slice(0, 60))}</option>`
+    ).join('');
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+let searchTimer;
+
+async function doSearch() {
+  const q = state.searchQuery;
+  const filter = state.activeFilter;
+  const project = state.currentProject;
+  if (!project) return;
+
+  const isFiltering = q || (filter !== 'all');
+
+  const normalView = document.getElementById('normal-view');
+  const searchResultsEl = document.getElementById('search-results');
+
+  if (!isFiltering) {
+    normalView.style.display = '';
+    searchResultsEl.style.display = 'none';
+    renderProject();
+    return;
+  }
+
+  normalView.style.display = 'none';
+  searchResultsEl.style.display = '';
+
+  const params = new URLSearchParams({ q, project });
+  if (filter === 'ai' || filter === 'human') params.set('authorType', filter);
+  if (filter === 'open' || filter === 'decided') params.set('status', filter);
+
+  try {
+    const data = await fetch('/api/search?' + params).then(r => r.json());
+    const questions = data.questions || [];
+    const decisions = data.decisions || [];
+
+    let html = '';
+
+    if (questions.length === 0 && decisions.length === 0) {
+      html = `<div class="empty"><h3>No results</h3><p>Try different keywords or clear the filters.</p></div>`;
+    } else {
+      if (questions.length > 0) {
+        html += `<div class="search-section-label">Open Questions (${questions.length})</div>`;
+        html += questions.map(r => renderQuestionCard(r.item, r.snippet)).join('');
+      }
+      if (decisions.length > 0) {
+        html += `<div class="search-section-label">Decisions (${decisions.length})</div>`;
+        html += decisions.map(r => renderDecisionCard(r.item, r.snippet)).join('');
+      }
+    }
+
+    searchResultsEl.innerHTML = html;
+  } catch (e) {
+    searchResultsEl.innerHTML = `<div class="empty"><h3>Search error</h3><p>${e.message}</p></div>`;
+  }
+}
+
+document.getElementById('search-input').addEventListener('input', e => {
+  state.searchQuery = e.target.value;
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(doSearch, 200);
+});
+
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    state.activeFilter = chip.dataset.filter;
+    doSearch();
+  });
+});
+
+// ── Load project ──────────────────────────────────────────────────────────────
+async function loadProject(name) {
+  if (!name) {
+    document.getElementById('no-project').style.display = '';
+    document.getElementById('project-view').style.display = 'none';
+    document.getElementById('add-question-btn').style.display = 'none';
+    state.currentProject = null;
+    state.data = null;
+    return;
+  }
+
+  try {
+    const data = await api('GET', `/api/projects/${name}`);
+    state.currentProject = name;
+    state.data = data;
+    document.getElementById('no-project').style.display = 'none';
+    document.getElementById('project-view').style.display = '';
+    document.getElementById('add-question-btn').style.display = '';
+    if (state.searchQuery || state.activeFilter !== 'all') {
+      doSearch();
+    } else {
+      renderProject();
+    }
+  } catch (e) {
+    showToast('Failed to load project: ' + e.message, 'red');
+  }
+}
+
+// ── Load projects list ────────────────────────────────────────────────────────
+async function loadProjects() {
+  try {
+    const projects = await api('GET', '/api/projects');
+    state.projects = projects;
+    const sel = document.getElementById('project-select');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— select —</option>' +
+      projects.map(p => `<option value="${p.name}"${p.name === current ? ' selected' : ''}>${p.name}</option>`).join('');
+
+    if (!current && projects.length === 0) {
+      document.getElementById('no-project').style.display = '';
+      document.getElementById('project-view').style.display = 'none';
+    }
+  } catch (e) {
+    console.error('Failed to load projects', e);
+  }
+}
+
+document.getElementById('project-select').addEventListener('change', e => {
+  loadProject(e.target.value || null);
+});
+
+// ── Add Question ──────────────────────────────────────────────────────────────
+document.getElementById('add-question-btn').addEventListener('click', () => {
+  document.getElementById('q-text').value = '';
+  document.getElementById('q-context').value = '';
+  qAuthor.reset();
+  openModal('question-modal');
+});
+
+document.getElementById('q-submit').addEventListener('click', async () => {
+  const text = document.getElementById('q-text').value.trim();
+  const context = document.getElementById('q-context').value.trim();
+  const authorType = qAuthor.get();
+  if (!text) return showToast('Question text is required', 'red');
+  try {
+    await api('POST', `/api/projects/${state.currentProject}/questions`, { text, context, authorType });
+    closeModal('question-modal');
+    showToast('Open Question added', 'green');
+    loadProject(state.currentProject);
+  } catch (e) {
+    showToast(e.message, 'red');
+  }
+});
+
+// ── Add Decision ──────────────────────────────────────────────────────────────
+document.getElementById('d-submit').addEventListener('click', async () => {
+  const questionId = document.getElementById('d-question-select').value || null;
+  const choice = document.getElementById('d-choice').value.trim();
+  const rationale = document.getElementById('d-rationale').value.trim();
+  const authorType = dAuthor.get();
+  if (!choice) return showToast('Decision text is required', 'red');
+  if (!rationale) return showToast('Rationale is required — what made you decide this?', 'red');
+  try {
+    await api('POST', `/api/projects/${state.currentProject}/decisions`, { questionId, choice, rationale, authorType });
+    closeModal('decision-modal');
+    showToast('Decision recorded', 'green');
+    loadProject(state.currentProject);
+  } catch (e) {
+    showToast(e.message, 'red');
+  }
+});
+
+// Also add via topbar (standalone decision)
+document.getElementById('topbar-add-decision')?.addEventListener('click', () => {
+  dAuthor.reset();
+  document.getElementById('d-choice').value = '';
+  document.getElementById('d-rationale').value = '';
+  document.getElementById('d-question-select').value = '';
+  openModal('decision-modal');
+});
+
+// ── New Project ───────────────────────────────────────────────────────────────
+async function createProject(name, desc) {
+  name = name.trim().replace(/\s+/g, '-');
+  if (!name) return showToast('Project name is required', 'red');
+  try {
+    await api('POST', '/api/projects', { name, description: desc || '' });
+    await loadProjects();
+    document.getElementById('project-select').value = name;
+    loadProject(name);
+    showToast(`Project "${name}" created`, 'green');
+  } catch (e) {
+    showToast(e.message, 'red');
+  }
+}
+
+document.getElementById('new-project-btn').addEventListener('click', () => {
+  document.getElementById('p-name').value = '';
+  document.getElementById('p-desc').value = '';
+  openModal('project-modal');
+});
+
+document.getElementById('p-submit').addEventListener('click', async () => {
+  const name = document.getElementById('p-name').value;
+  const desc = document.getElementById('p-desc').value;
+  await createProject(name, desc);
+  closeModal('project-modal');
+});
+
+document.getElementById('quick-create-btn').addEventListener('click', async () => {
+  const name = document.getElementById('quick-project-name').value;
+  await createProject(name, '');
+});
+
+document.getElementById('quick-project-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('quick-create-btn').click();
+});
+
+// ── Enter key submits in modals ───────────────────────────────────────────────
+['q-text', 'p-name', 'p-desc', 'd-choice'].forEach(id => {
+  document.getElementById(id)?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      if (id.startsWith('q-')) document.getElementById('q-submit').click();
+      else if (id.startsWith('p-')) document.getElementById('p-submit').click();
+      else if (id.startsWith('d-')) { /* multi-field, don't auto-submit */ }
+    }
+  });
+});
+
+// ── SSE live reload ───────────────────────────────────────────────────────────
+function connectSSE() {
+  const es = new EventSource('/api/events');
+  es.addEventListener('change', e => {
+    const { project } = JSON.parse(e.data);
+    if (project === state.currentProject) {
+      loadProject(state.currentProject);
+    }
+    // If project list changes, reload it
+    loadProjects();
+  });
+  es.onerror = () => {
+    setTimeout(connectSSE, 3000);
+    es.close();
+  };
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  await loadProjects();
+  // Auto-select first project if only one exists
+  if (state.projects.length === 1) {
+    const name = state.projects[0].name;
+    document.getElementById('project-select').value = name;
+    loadProject(name);
+  } else if (state.projects.length === 0) {
+    document.getElementById('no-project').style.display = '';
+  }
+  connectSSE();
+}
+
+init();
+</script>
+</body>
+</html>
