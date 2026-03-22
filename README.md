@@ -2,7 +2,6 @@
 
 A persistent, searchable database of project decisions — tagged by whether they were made by a human or an AI tool, editable in a browser UI, and queryable by any AI coding assistant.
 
-![DecisionHub UI showing Open Questions and Decisions with AI/Human badges](https://github.com/jnemargut/decisionhub/raw/main/docs/screenshot.png)
 
 ## Why
 
